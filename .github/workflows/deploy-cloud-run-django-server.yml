@@ -1,0 +1,288 @@
+# Deploy a Django service to Google Cloud Run.
+
+name: deploy-cloud-run-django-server
+
+on:
+  workflow_call:
+    inputs:
+      gcp_project_name:
+        type: string
+        required: true
+      gcp_project_number:
+        type: string
+        required: true
+      gcp_region:
+        type: string
+        required: true
+      gcp_resource_affix:
+        type: string
+        required: true
+      gcp_service_name:
+        type: string
+        required: true
+      gcp_environment:
+        type: string
+        required: false
+        default: 'main'
+      dockerfile:
+        type: string
+        required: true
+        description: The path from the repository root to the Dockerfile for your container's image e.g. './Dockerfile'.
+      cloud_run_base_url:
+        type: string
+        required: true
+      cloud_run_flags:
+        type: string
+        required: false
+        default: '--ingress=all --allow-unauthenticated'
+
+
+jobs:
+  info:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 5
+
+    permissions:
+      contents: read
+
+    outputs:
+      branch_tag_kebab: ${{ steps.get-deployment-info.outputs.branch_tag_kebab }}
+      branch_tag_screaming: ${{ steps.get-deployment-info.outputs.branch_tag_screaming}}
+      image_latest_artifact: ${{ steps.get-deployment-info.outputs.image_latest_artifact}}
+      image_latest_tag: ${{ steps.get-deployment-info.outputs.image_latest_tag }}
+      image_version_artifact: ${{ steps.get-deployment-info.outputs.image_version_artifact}}
+      image_version_tag: ${{ steps.get-deployment-info.outputs.image_version_tag }}
+      short_sha: ${{ steps.get-deployment-info.outputs.short_sha }}
+      gcp_project_name: ${{ steps.get-deployment-info.outputs.gcp_project_name}}
+      gcp_project_number: ${{ steps.get-deployment-info.outputs.gcp_project_number}}
+      gcp_region: ${{ steps.get-deployment-info.outputs.gcp_region}}
+      gcp_resource_affix: ${{ steps.get-deployment-info.outputs.gcp_resource_affix}}
+      gcp_service_name: ${{ steps.get-deployment-info.outputs.gcp_service_name}}
+      version: ${{ steps.get-deployment-info.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+
+      - name: Get deployment info
+        id: get-deployment-info
+        uses: octue/get-deployment-info@0.2.1
+        with:
+          gcp_project_name: ${{ inputs.gcp_project_name }}
+          gcp_project_number: ${{ inputs.gcp_project_number }}
+          gcp_region: ${{ inputs.gcp_region }}
+          gcp_resource_affix: ${{ inputs.gcp_resource_affix }}
+          gcp_service_name: ${{ inputs.gcp_service_name }}
+          gcp_environment: ${{ inputs.gcp_environment }}
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: info
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Authenticate with GCP Workload Identity
+        id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          # NOTE: If setting create_credentials_file=true, .dockerignore file must include `gha-creds-*.json` to avoid baking these credentials into build
+          create_credentials_file: true
+          workload_identity_provider: projects/${{ needs.info.outputs.gcp_project_number }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
+          service_account: github-actions-ci@${{ needs.info.outputs.gcp_project_name }}.iam.gserviceaccount.com
+
+      - name: Setup gcloud
+        uses: "google-github-actions/setup-gcloud@v0"
+
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
+
+      - name: Build and push artifact with latest and version tags
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/amd64
+          file: ${{ inputs.dockerfile }}
+          load: false
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: |
+            ${{ needs.info.outputs.image_version_artifact }}
+            ${{ needs.info.outputs.image_latest_artifact }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs:
+      - build
+      - info
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        # Shouldn't be necessary since we pull code in an image, but it's required by google-github-actions/auth
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Authenticate with GCP Workload Identity
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          # NOTE: If setting create_credentials_file=true, .dockerignore file must include `gha-creds-*.json` to avoid baking these credentials into build
+          create_credentials_file: true
+          workload_identity_provider: projects/${{ needs.info.outputs.gcp_project_number }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
+          service_account: github-actions-ci@${{ needs.info.outputs.gcp_project_name }}.iam.gserviceaccount.com
+
+      - name: Setup GCloud CLI
+        uses: "google-github-actions/setup-gcloud@v0"
+
+      - name: Get SecretManager prefix
+        id: secrets_prefix
+        run: |
+          echo "prefix=${{ needs.info.outputs.gcp_project_name }}/${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> $GITHUB_OUTPUT
+
+      - name: Show SecretManager prefix
+        run: |
+          echo "Secretmanager prefix: ${{ steps.secrets_prefix.outputs.prefix }}"
+
+      - name: Access GCP SecretManager
+        id: secrets
+        uses: "google-github-actions/get-secretmanager-secrets@v0"
+        with:
+          secrets: |-
+            DATABASE_URL:${{ steps.secrets_prefix.outputs.prefix }}-db-proxy-uri
+            DJANGO_SECRET_KEY:${{ steps.secrets_prefix.outputs.prefix }}-django-secret-key
+            GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}-google-application-credentials
+
+      - name: Connect to Cloud SQL
+        # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
+        uses: wagnerpereira/gce-cloudsql-proxy-action@v2
+        with:
+          instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:primary
+
+      - name: Store GCP credentials in a file
+        # Pipe the credentials secret value to disk, allowing it to be mounted in the container just like in cloud run.
+        # This lets us use the same secrets pattern as the cloud run service to do the release.
+        id: store-gcp-credentials-in-file
+        run: |
+          FILENAME=gha-creds-from-secret-manager.json
+          echo "credentials_file_name=$FILENAME" >> $GITHUB_OUTPUT
+          echo '${{ steps.secrets.outputs.GOOGLE_APPLICATION_CREDENTIALS }}' > $(pwd)/$FILENAME
+          echo "credentials_file_path=$(pwd)/$FILENAME" >> $GITHUB_OUTPUT
+
+      - name: Show credentials filename and path
+        run: |
+          echo "Credentials credentials_file_name: ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }}"
+          echo "Credentials credentials_file_path: ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}"
+
+      - name: Set dotenv
+        # Set here rather than piped directly to the container, to allow us to usefully debug later steps of this action via reverse shell
+        run: |
+          touch .env
+          echo "DATABASE_URL=${{ steps.secrets.outputs.DATABASE_URL }}" >> .env
+          echo "DJANGO_SECRET_KEY=${{ steps.secrets.outputs.DJANGO_SECRET_KEY }}" >> .env
+          echo "DJANGO_SETTINGS_MODULE=${{ needs.info.outputs.gcp_service_name }}.settings" >> .env
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }}" >> .env
+          echo "GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
+          echo "GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
+          echo "GCP_TASKS_DOMAIN=https://doesnt-matter-because-tasks-should-get-mocked.com" >> .env
+
+      - name: Configure Docker for GCP
+        run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
+
+      - name: Create start script and print instructions [DEBUG]
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'}}
+        run: |
+          echo "docker run \
+            --network="host" \
+            --env-file .env \
+            --volume ${{ steps.authoverride.outputs.credentials_file_path }}:/workspace/${{ steps.authoverride.outputs.credentials_file_name }} \
+            -it \
+            --rm \
+            ${{ github.event.inputs.image_version_artifact }} \
+            bash
+          " >> start.sh
+          echo "Exec into the container by running `sh start.sh`."
+
+      - name: Setup tmate session [DEBUG]
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'}}
+        uses: mxschmitt/action-tmate@v3
+        env:
+          PERSONAL_ACCESS_TOKEN_GITHUB: ${{ secrets.PACKAGE_TOKEN_GITHUB }}
+
+        # TODO Could do this as a job, now that cloud run jobs are in preview
+      - name: Run Django Release (in cloud run equivalent environment)
+        id: release
+        # Don't deploy if manually dispatched or debugging
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
+        run: |
+          docker run \
+            --network="host" \
+            --env-file .env \
+            --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
+            --rm \
+            ${{ needs.info.outputs.image_version_artifact }} \
+            python manage.py release
+
+      # - name: Deploy to Cloud Run Worker
+      #   id: deploy-worker
+      #   if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
+      #   uses: google-github-actions/deploy-cloudrun@v0
+      #   with:
+      #     env_vars: |
+      #       ATOMIC_REQUESTS=0
+      #       GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}
+      #       GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-primary
+      #       GCP_TASKS_DOMAIN=https://sha${{ needs.info.outputs.short_sha }}---${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-worker-fhngvhbkyq-ew.a.run.app/
+      #     image: ${{ needs.info.outputs.image_version_artifact }}
+      #     region: ${{ needs.info.outputs.gcp_region }}
+      #     service: example-worker-${{ needs.info.outputs.branch_tag_kebab }}
+      #     tag: sha${{ needs.info.outputs.short_sha }}
+
+      - name: Deploy to Cloud Run Server
+        id: deploy-server
+        # Don't deploy if manually dispatched or debugging
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
+        uses: google-github-actions/deploy-cloudrun@v0
+        with:
+          # Currently places tasks onto itself. To place tasks onto a worker, use the following:
+          # GCP_TASKS_DOMAIN=${{ steps.deploy_worker.outputs.url }}
+          env_vars: |
+            GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}
+            GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-primary
+            GCP_TASKS_DOMAIN=https://sha${{ needs.info.outputs.short_sha }}---${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-${{ needs.info.outputs.gcp_service_name }}-${{ inputs.cloud_run_base_url }}
+          image: ${{ needs.info.outputs.image_version_artifact }}
+          region: ${{ needs.info.outputs.gcp_region }}
+          service: ${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-${{ needs.info.outputs.gcp_service_name }}
+          tag: sha${{ needs.info.outputs.short_sha }}
+
+      # TODO unapply the migration if it or the deployment(s) failed
+      # - name: Show Cloud Run Deployment URLs
+      #   run: |
+      #     echo "${{ steps.deploy-worker.outputs.url }}"
+      #     echo "${{ steps.deploy-server.outputs.url }}"
