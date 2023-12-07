@@ -247,7 +247,7 @@ jobs:
             --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
             --rm \
             ${{ needs.info.outputs.image_version_artifact }} \
-            python manage.py release
+            python manage.py collectstatic --no-input && python manage.py migrate --no-input
 
       # - name: Deploy to Cloud Run Worker
       #   id: deploy-worker
