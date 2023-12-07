@@ -236,8 +236,8 @@ jobs:
           PERSONAL_ACCESS_TOKEN_GITHUB: ${{ secrets.PACKAGE_TOKEN_GITHUB }}
 
         # TODO Could do this as a job, now that cloud run jobs are in preview
-      - name: Run Django Release (in cloud run equivalent environment)
-        id: release
+      - name: Collect static files (in cloud run equivalent environment)
+        id: collect-static
         # Don't deploy if manually dispatched or debugging
         if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
         run: |
@@ -247,7 +247,20 @@ jobs:
             --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
             --rm \
             ${{ needs.info.outputs.image_version_artifact }} \
-            python manage.py collectstatic --no-input && python manage.py migrate --no-input
+            python manage.py collectstatic --no-input
+
+      - name: Migrate database (in cloud run equivalent environment)
+        id: migrate-database
+        # Don't deploy if manually dispatched or debugging
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
+        run: |
+          docker run \
+            --network="host" \
+            --env-file .env \
+            --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
+            --rm \
+            ${{ needs.info.outputs.image_version_artifact }} \
+            python manage.py migrate --no-input
 
       # - name: Deploy to Cloud Run Worker
       #   id: deploy-worker
