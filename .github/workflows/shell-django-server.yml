@@ -36,6 +36,7 @@ jobs:
       gcp_project_name: ${{ steps.get-deployment-info.outputs.gcp_project_name}}
       gcp_project_number: ${{ steps.get-deployment-info.outputs.gcp_project_number}}
       gcp_region: ${{ steps.get-deployment-info.outputs.gcp_region}}
+      gcp_resource_affix: ${{ steps.get-deployment-info.outputs.gcp_resource_affix }}
 
     steps:
       - name: Checkout
@@ -70,7 +71,7 @@ jobs:
 
       - name: Authenticate with GCP Workload Identity
         id: auth
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v2
         with:
           create_credentials_file: true
           workload_identity_provider: projects/${{ needs.info.outputs.gcp_project_number }}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider
