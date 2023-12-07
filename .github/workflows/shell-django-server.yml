@@ -19,13 +19,6 @@ on:
       gcp_resource_affix:
         type: string
         required: true
-      gcp_service_name:
-        type: string
-        required: true
-      gcp_environment:
-        type: string
-        required: false
-        default: 'main'
 
 jobs:
   info:
@@ -40,8 +33,6 @@ jobs:
       gcp_project_name: ${{ steps.get-deployment-info.outputs.gcp_project_name}}
       gcp_project_number: ${{ steps.get-deployment-info.outputs.gcp_project_number}}
       gcp_region: ${{ steps.get-deployment-info.outputs.gcp_region}}
-      gcp_resource_affix: ${{ steps.get-deployment-info.outputs.gcp_resource_affix}}
-#      gcp_service_name: ${{ steps.get-deployment-info.outputs.gcp_service_name}}
 
     steps:
       - name: Checkout
