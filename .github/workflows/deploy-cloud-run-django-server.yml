@@ -293,6 +293,7 @@ jobs:
           region: ${{ needs.info.outputs.gcp_region }}
           service: ${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-${{ needs.info.outputs.gcp_service_name }}
           tag: sha${{ needs.info.outputs.short_sha }}
+          flags: ${{ inputs.cloud_run_flags }}
 
       # TODO unapply the migration if it or the deployment(s) failed
       # - name: Show Cloud Run Deployment URLs
