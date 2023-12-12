@@ -130,7 +130,8 @@ jobs:
           platforms: linux/amd64
           file: ${{ inputs.dockerfile }}
           build-args: ${{ inputs.build_args }}
-          secrets: ${{ inputs.build_secrets }}
+          secrets: |
+            "${{ inputs.build_secrets }}"
           load: false
           push: true
           cache-from: type=gha
