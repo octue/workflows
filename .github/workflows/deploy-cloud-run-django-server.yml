@@ -28,6 +28,11 @@ on:
         type: string
         required: true
         description: The path from the repository root to the Dockerfile for your container's image e.g. './Dockerfile'.
+      build_args:
+        type: string
+        description: "Comma-separated list of build-time variables."
+        required: false
+        default: ""
       cloud_run_base_url:
         type: string
         required: true
@@ -119,6 +124,7 @@ jobs:
           context: .
           platforms: linux/amd64
           file: ${{ inputs.dockerfile }}
+          build-args: ${{ inputs.build_args }}
           load: false
           push: true
           cache-from: type=gha
