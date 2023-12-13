@@ -120,9 +120,35 @@ jobs:
 ## Code and release quality control
 
 ### Checking release semantic version
+This workflow checks if the semantic version in the repository's `setup.py`, `pyproject.toml`, or `package.json` file
+is the version expected according to the most recent version tag and the 
+[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) since then. We recommend using this workflow on
+release branches.
+
+**Example usage**
+
+Add the following to a workflow:
+
+```shell
+on:
+  pull_request:
+    branches:
+      - main
+      
+jobs:
+  ...
+  
+  check-semantic-version:
+    uses: octue/workflows/.github/workflows/check-semantic-version.yml@main
+    with:
+      path: pyproject.toml
+      breaking_change_indicated_by: minor
+  
+  ...
+```      
 
 ### Automatically updating a pull request description with release notes
-This workflow takes the the pull request's commit messages in the form of 
+This workflow takes the pull request's commit messages in the form of 
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and uses them to generate the basis for a 
 description of the pull request that can also be used as release notes. This workflow must be used with a `pull_request`
 trigger.
@@ -138,7 +164,7 @@ on: [pull_request]
 jobs:
   ...
   
-  description:
+  generate-pull-request-description:
     uses: octue/workflows/.github/workflows/generate-pull-request-description.yml@main
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
