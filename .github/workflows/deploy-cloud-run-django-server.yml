@@ -20,20 +20,21 @@ on:
       server_name:
         type: string
         required: true
+      cloud_run_base_url:
+        type: string
+        required: true
       gcp_environment:
         type: string
         required: false
         default: 'main'
       dockerfile:
         type: string
-        required: true
-        description: The path from the repository root to the Dockerfile for your container's image e.g. './Dockerfile'.
-      cloud_run_base_url:
-        type: string
-        required: true
+        required: false
+        default: ""
+        description: The path from the repository root to the Dockerfile for your container's image; defaults to "./Dockerfile" (a Dockerfile in the repository root).
       build_args:
         type: string
-        description: "Line-separated list of build-time variables."
+        description: Line-separated list of build-time variables.
         required: false
         default: ""
       cloud_run_flags:
@@ -44,7 +45,7 @@ on:
         type: string
         required: false
         default: ""
-        description: "Defaults to "<server_name>.settings"
+        description: Defaults to "<server_name>.settings"
 
     secrets:
       build_secrets:
@@ -128,12 +129,21 @@ jobs:
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
 
+      - name: Get dockerfile path
+        id: get-dockerfile-path
+        run: |
+          if [ "${{ inputs.dockerfile }}" = "" ]; then
+            echo "dockerfile_path=./Dockerfile" >> $GITHUB_OUTPUT
+          else
+            echo "dockerfile_path=${{ inputs.dockerfile }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push artifact with latest and version tags
         uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64
-          file: ${{ inputs.dockerfile }}
+          file: ${{ steps.get-dockerfile-path.outputs.dockerfile_path }}
           build-args: ${{ inputs.build_args }}
           secrets: |
             "${{ secrets.build_secrets }}"
