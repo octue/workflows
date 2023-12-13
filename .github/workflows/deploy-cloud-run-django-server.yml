@@ -36,15 +36,15 @@ on:
         description: "Comma-separated list of build-time variables."
         required: false
         default: ""
-      build_secrets:
-        type: string
-        description: "Comma-separated list of build-time secrets."
-        required: false
-        default: ""
       cloud_run_flags:
         type: string
         required: false
         default: '--ingress=all --allow-unauthenticated'
+
+    secrets:
+      build_secrets:
+        description: "Line-separated list of build-time secrets."
+        required: false
 
 
 jobs:
@@ -131,7 +131,7 @@ jobs:
           file: ${{ inputs.dockerfile }}
           build-args: ${{ inputs.build_args }}
           secrets: |
-            "${{ inputs.build_secrets }}"
+            "${{ secrets.build_secrets }}"
           load: false
           push: true
           cache-from: type=gha
