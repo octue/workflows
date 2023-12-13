@@ -49,8 +49,8 @@ jobs:
 
 ### Deploying a Cloud Run Octue service
 This workflow builds and deploys a revision of a dockerised Octue service to Google Cloud Run, storing the image in 
-Google Cloud  Artifact Registry. A Google Pub/Sub push subscription is created for the revision and, if given, it's 
-registered with a service registry.
+Google Cloud Artifact Registry. A Google Pub/Sub push subscription is created for the revision and, if given, it's 
+registered with a service registry. The Dockerfile can be located locally or at a URL.
 
 **Example usage**
 
@@ -76,10 +76,46 @@ jobs:
       gcp_service_name: my-service-name
       local_dockerfile: path/to/Dockerfile
       cloud_run_flags: '--ingress=all --allow-unauthenticated --service-account=my-service-service-account@my-project.iam.gserviceaccount.com --max-instances=10 --memory=2048Mi'
+      service_registry_endpoint: https://example.com/integrations/octue/services
+
+  ...
 ```
 
 ### Shelling into a Cloud Run django server
+This workflow spins up a container from the provided image, populates its environment, connects the database to it, and
+sets up a `tmate` session to allow the caller to ssh into it. We recommend using this workflow with a 
+`workflow_dispatch` trigger.
 
+**Example usage**
+
+Add the following to a workflow:
+
+```shell
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "The URI of the image to run as a container"
+        type: string
+
+jobs:
+  ...
+  
+  shell:
+    uses: octue/workflows/.github/workflows/shell-django-server.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      image: ${{ github.event.inputs.image }}
+      gcp_project_name: my-project
+      gcp_project_number: 1234
+      gcp_region: europe-west3
+      gcp_resource_affix: my-resource-affix
+      server_name: server
+
+  ...      
+```
 
 ## Code and release quality control
 
