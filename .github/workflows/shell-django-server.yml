@@ -19,7 +19,7 @@ on:
       gcp_resource_affix:
         type: string
         required: true
-      gcp_service_name:
+      server_name:
         type: string
         required: true
 
@@ -53,7 +53,7 @@ jobs:
           gcp_project_number: ${{ inputs.gcp_project_number }}
           gcp_region: ${{ inputs.gcp_region }}
           gcp_resource_affix: ${{ inputs.gcp_resource_affix }}
-          gcp_service_name: ${{ inputs.gcp_service_name }}
+          gcp_service_name: ${{ inputs.server_name }}
 
   spin-up:
     runs-on: ubuntu-latest
