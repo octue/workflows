@@ -278,7 +278,7 @@ jobs:
       # - name: Deploy to Cloud Run Worker
       #   id: deploy-worker
       #   if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
-      #   uses: google-github-actions/deploy-cloudrun@v0
+      #   uses: google-github-actions/deploy-cloudrun@v2
       #   with:
       #     env_vars: |
       #       ATOMIC_REQUESTS=0
@@ -294,7 +294,7 @@ jobs:
         id: deploy-server
         # Don't deploy if manually dispatched or debugging
         if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
-        uses: google-github-actions/deploy-cloudrun@v0
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
           # Currently places tasks onto itself. To place tasks onto a worker, use the following:
           # GCP_TASKS_DOMAIN=${{ steps.deploy_worker.outputs.url }}
