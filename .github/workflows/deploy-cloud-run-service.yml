@@ -33,7 +33,7 @@ on:
         required: false
         default: ''
         description: Use a local Dockerfile at this path e.g. './Dockerfile'. Overrides the `dockerfile_url` input.
-      service_registry_url:
+      service_registry_endpoint:
         type: string
         required: false
         default: ''
@@ -171,11 +171,11 @@ jobs:
           push_endpoint: ${{ steps.deploy-service.outputs.url }}
 
       - name: Register service revision
-        if: ${{ inputs.service_registry_url != '' }}
+        if: ${{ inputs.service_registry_endpoint != '' }}
         uses: octue/register-service-revision@0.2.0
         with:
           service_namespace: ${{ needs.info.outputs.gcp_resource_affix }}
           service_name: ${{ needs.info.outputs.gcp_service_name }}
           service_revision_tag: ${{ needs.info.outputs.revision_tag }}
           is_default: "false"
-          service_registry_endpoint: https://api.windquest.app/integrations/octue/services
+          service_registry_endpoint: ${{ inputs.service_registry_endpoint }}
