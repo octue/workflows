@@ -17,7 +17,7 @@ on:
       gcp_resource_affix:
         type: string
         required: true
-      gcp_service_name:
+      server_name:
         type: string
         required: true
       gcp_environment:
@@ -33,7 +33,7 @@ on:
         required: true
       build_args:
         type: string
-        description: "Comma-separated list of build-time variables."
+        description: "Line-separated list of build-time variables."
         required: false
         default: ""
       cloud_run_flags:
@@ -68,7 +68,7 @@ jobs:
       gcp_project_number: ${{ steps.get-deployment-info.outputs.gcp_project_number}}
       gcp_region: ${{ steps.get-deployment-info.outputs.gcp_region}}
       gcp_resource_affix: ${{ steps.get-deployment-info.outputs.gcp_resource_affix}}
-      gcp_service_name: ${{ steps.get-deployment-info.outputs.gcp_service_name}}
+      server_name: ${{ steps.get-deployment-info.outputs.gcp_service_name}}
       version: ${{ steps.get-deployment-info.outputs.version }}
 
     steps:
@@ -86,7 +86,7 @@ jobs:
           gcp_project_number: ${{ inputs.gcp_project_number }}
           gcp_region: ${{ inputs.gcp_region }}
           gcp_resource_affix: ${{ inputs.gcp_resource_affix }}
-          gcp_service_name: ${{ inputs.gcp_service_name }}
+          gcp_service_name: ${{ inputs.server_name }}
           gcp_environment: ${{ inputs.gcp_environment }}
 
   build:
@@ -219,7 +219,7 @@ jobs:
           touch .env
           echo "DATABASE_URL=${{ steps.secrets.outputs.DATABASE_URL }}" >> .env
           echo "DJANGO_SECRET_KEY=${{ steps.secrets.outputs.DJANGO_SECRET_KEY }}" >> .env
-          echo "DJANGO_SETTINGS_MODULE=${{ needs.info.outputs.gcp_service_name }}.settings" >> .env
+          echo "DJANGO_SETTINGS_MODULE=${{ needs.info.outputs.server_name }}.settings" >> .env
           echo "GOOGLE_APPLICATION_CREDENTIALS=/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }}" >> .env
           echo "GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
           echo "GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
@@ -301,10 +301,10 @@ jobs:
           env_vars: |
             GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}
             GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-primary
-            GCP_TASKS_DOMAIN=https://sha${{ needs.info.outputs.short_sha }}---${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-${{ needs.info.outputs.gcp_service_name }}-${{ inputs.cloud_run_base_url }}
+            GCP_TASKS_DOMAIN=https://sha${{ needs.info.outputs.short_sha }}---${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-${{ needs.info.outputs.server_name }}-${{ inputs.cloud_run_base_url }}
           image: ${{ needs.info.outputs.image_version_artifact }}
           region: ${{ needs.info.outputs.gcp_region }}
-          service: ${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-${{ needs.info.outputs.gcp_service_name }}
+          service: ${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-${{ needs.info.outputs.server_name }}
           tag: sha${{ needs.info.outputs.short_sha }}
           flags: ${{ inputs.cloud_run_flags }}
 
