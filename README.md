@@ -122,3 +122,29 @@ jobs:
 ### Checking release semantic version
 
 ### Automatically updating a pull request description with release notes
+This workflow takes the the pull request's commit messages in the form of 
+[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and uses them to generate the basis for a 
+description of the pull request that can also be used as release notes. This workflow must be used with a `pull_request`
+trigger.
+
+**Example usage**
+
+Add the following to a workflow:
+
+```shell
+
+on: [pull_request]
+
+jobs:
+  ...
+  
+  description:
+    uses: octue/workflows/.github/workflows/generate-pull-request-description.yml@main
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: read
+      pull-requests: write
+
+  ...     
+```
