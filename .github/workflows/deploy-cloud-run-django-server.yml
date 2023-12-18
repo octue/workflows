@@ -232,7 +232,7 @@ jobs:
         id: django-settings
         run: |
           if [ "${{ inputs.django_settings_module }}" = "" ]; then
-            echo "django_settings_module=${{ needs.info.outputs.server_name }}.settings"" >> $GITHUB_OUTPUT
+            echo "django_settings_module=${{ needs.info.outputs.server_name }}.settings" >> $GITHUB_OUTPUT
           else
             echo "django_settings_module=${{ inputs.django_settings_module }}" >> $GITHUB_OUTPUT
           fi
