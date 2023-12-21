@@ -143,7 +143,7 @@ jobs:
             ${{ inputs.image }} \
             bash
           " >> start.sh
-          echo "Exec into the container by running `sh start.sh`."
+          echo "Exec into the container by running "sh start.sh"."
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
