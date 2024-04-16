@@ -113,6 +113,8 @@ jobs:
       gcp_region: europe-west3
       gcp_resource_affix: my-resource-affix
       server_name: server
+      settings_module: server.settings
+      database_name: primary
 
   ...      
 ```

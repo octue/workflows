@@ -65,21 +65,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install poetry
         uses: snok/install-poetry@v1
 
       - name: Get deployment info
         id: get-deployment-info
-        uses: octue/get-deployment-info@0.2.1
+        uses: octue/get-deployment-info@0.3.2
         with:
           gcp_project_name: ${{ inputs.gcp_project_name }}
           gcp_project_number: ${{ inputs.gcp_project_number }}
           gcp_region: ${{ inputs.gcp_region }}
           gcp_resource_affix: ${{ inputs.gcp_resource_affix }}
           gcp_service_name: ${{ inputs.gcp_service_name }}
-          gcp_environment: ${{ inputs.gcp_environment }}
 
   build:
     runs-on: ubuntu-latest
@@ -92,7 +91,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -161,8 +160,8 @@ jobs:
       - name: Show deployed service URL
         run: echo "${{ steps.deploy-service.outputs.url }}"
 
-      - name: Create topic and subscription
-        uses: octue/create-push-subscription@0.2.2
+      - name: Create service revision push subscription
+        uses: octue/create-push-subscription@0.4.0
         with:
           project_name: ${{ needs.info.outputs.gcp_project_name }}
           service_namespace: ${{ needs.info.outputs.gcp_resource_affix }}
