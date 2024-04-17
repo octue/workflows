@@ -27,12 +27,13 @@ on:
       dockerfile_url:
         type: string
         required: false
-        default: 'https://raw.githubusercontent.com/octue/octue-sdk-python/main/octue/cloud/deployment/google/cloud_run/Dockerfile'
+        default: 'https://raw.githubusercontent.com/octue/octue-sdk-python/main/octue/cloud/deployment/google/cloud_run/Dockerfile-python311'
+        description: Use the default Octue data service dockerfile (based on python3.11).
       local_dockerfile:
         type: string
         required: false
         default: ''
-        description: Use a local Dockerfile at this path e.g. './Dockerfile'. Overrides the `dockerfile_url` input.
+        description: Use a local Dockerfile at this path e.g. './Dockerfile'. Not used by default; overrides the `dockerfile_url` input.
       service_registry_endpoint:
         type: string
         required: false
