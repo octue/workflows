@@ -50,7 +50,8 @@ jobs:
 ### Deploying a Cloud Run Octue service
 This workflow builds and deploys a revision of a dockerised Octue service to Google Cloud Run, storing the image in 
 Google Cloud Artifact Registry. A Google Pub/Sub push subscription is created for the revision and, if given, it's 
-registered with a service registry. The Dockerfile can be located locally or at a URL.
+registered with a service registry. By default, the default Octue data service `Dockerfile` is used (based on 
+python3.11) but any `Dockerfile` can be provided either locally or from a URL.
 
 **Example usage**
 
