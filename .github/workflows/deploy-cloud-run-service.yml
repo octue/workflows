@@ -117,7 +117,7 @@ jobs:
 
       - name: Get dockerfile
         if: ${{ inputs.local_dockerfile == '' }}
-        run: wget ${{ inputs.dockerfile_url }}
+        run: wget -O Dockerfile ${{ inputs.dockerfile_url }}
 
       - name: Get dockerfile path
         id: get-dockerfile-path
