@@ -51,12 +51,12 @@ on:
         type: boolean
         required: false
         default: false
-        description: If deploying from a remote repository, optionally override its service configuration by providing a path to one in the local repository.
+        description: If deploying from a remote repository, override its service configuration from the local repository.
       use_local_app_configuration:
         type: boolean
         required: false
         default: false
-        description: If deploying from a remote repository, optionally override its app configuration by providing a path to one in the local repository.
+        description: If deploying from a remote repository, override its app configuration from the local repository.
 
 
 jobs:
@@ -119,11 +119,11 @@ jobs:
           path: remote
 
       - name: Override remote repository service configuration
-        if: '${{ inputs.repository }} && ${{ inputs.use_local_service_configuration != '' }}'
+        if: ${{ inputs.repository }} && ${{ inputs.use_local_service_configuration != '' }}
         run: cp remote/octue.yaml octue.yaml
 
       - name: Override remote repository app configuration
-        if: '${{ inputs.repository }} && ${{ inputs.local_app_configuration != '' }}'
+        if: ${{ inputs.repository }} && ${{ inputs.local_app_configuration != '' }}
         run: cp remote/app_configuration.json app_configuration.json
 
       - name: Set up QEMU
