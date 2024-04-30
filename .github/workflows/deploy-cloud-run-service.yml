@@ -147,28 +147,33 @@ jobs:
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
 
-      - name: Change directory into remote repository
-        if: ${{ inputs.repository }}
-        run: cd remote && pwd
-
       - name: Get dockerfile
         if: ${{ inputs.local_dockerfile == '' }}
         run: wget -O Dockerfile ${{ inputs.dockerfile_url }}
+
+      - name: Choose context for docker build
+        id: choose-build-context
+        run: |
+          if [ "${{ inputs.repository }}" = "" ]; then
+            echo "context=." >> $GITHUB_OUTPUT
+          else
+            echo "context=remote" >> $GITHUB_OUTPUT
+          fi
 
       - name: Get dockerfile path
         id: get-dockerfile-path
         run: |
           if [ "${{ inputs.local_dockerfile }}" = "" ]; then
-            echo "dockerfile_path=./Dockerfile" >> $GITHUB_OUTPUT
+            echo "dockerfile_path=${{ steps.choose-build-context.outputs.context }}/Dockerfile" >> $GITHUB_OUTPUT
           else
-            echo "dockerfile_path=${{ inputs.local_dockerfile }}" >> $GITHUB_OUTPUT
+            echo "dockerfile_path=${{ steps.choose-build-context.outputs.context }}/${{ inputs.local_dockerfile }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Build and push container with latest and version tags
         # Note: We don't push containers with shas because we'd end up with terabytes in storage (an image for every commit)
         uses: docker/build-push-action@v2
         with:
-          context: .
+          context: "${{ steps.choose-build-context.outputs.context }}"
           platforms: linux/amd64
           file: ${{ steps.get-dockerfile-path.outputs.dockerfile_path }}
           push: true
