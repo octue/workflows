@@ -149,7 +149,7 @@ jobs:
 
       - name: Change directory into remote repository
         if: ${{ inputs.repository }}
-        run: cd remote
+        run: cd remote && pwd
 
       - name: Get dockerfile
         if: ${{ inputs.local_dockerfile == '' }}
