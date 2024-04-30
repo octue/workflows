@@ -46,7 +46,17 @@ on:
         type: string
         required: false
         default: ""
-        description: Deploy a service from a different repository e.g. "octue/example-service-cloud-run". Defaults to the current repository.
+        description: Deploy a service from a remote repository e.g. "octue/example-service-cloud-run". Defaults to the current repository.
+      local_service_configuration:
+        type: string
+        required: false
+        default: ""
+        description: If deploying from a remote repository, optionally override its service configuration by providing a path to one in the local repository.
+      local_app_configuration:
+        type: string
+        required: false
+        default: ""
+        description: If deploying from a remote repository, optionally override its app configuration by providing a path to one in the local repository.
 
 
 jobs:
@@ -98,10 +108,23 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout
+      - name: Checkout local repository
+        uses: actions/checkout@v4
+
+      - name: Checkout remote repository
+        if: ${{ inputs.repository }}
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
+          path: remote
+
+      - name: Override remote repository service configuration
+        if: ${{ inputs.local_service_configuration != '' }}
+        run: cp remote/octue.yaml octue.yaml
+
+      - name: Override remote repository app configuration
+        if: ${{ inputs.local_app_configuration != '' }}
+        run: cp remote/app_configuration.json app_configuration.json
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
