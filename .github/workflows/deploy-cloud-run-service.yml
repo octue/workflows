@@ -119,11 +119,11 @@ jobs:
           path: remote
 
       - name: Override remote repository service configuration
-        if: ${{ inputs.repository != '' }} && ${{ inputs.use_local_service_configuration != '' }}
+        if: "${{ inputs.repository != '' }} && ${{ inputs.use_local_service_configuration != '' }}"
         run: cp octue.yaml remote/octue.yaml
 
       - name: Override remote repository app configuration
-        if: ${{ inputs.repository != '' }} && ${{ inputs.local_app_configuration != '' }}
+        if: "${{ inputs.repository != '' }} && ${{ inputs.local_app_configuration != '' }}"
         run: cp app_configuration.json remote/app_configuration.json
 
       - name: Set up QEMU
