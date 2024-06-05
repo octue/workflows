@@ -47,6 +47,11 @@ on:
         required: false
         default: ""
         description: Deploy a service from a remote repository e.g. "octue/example-service-cloud-run". Defaults to the current repository.
+      ref:
+        type: string
+        required: false
+        default: ""
+        description: If deploying from a remote repository, use this ref (a commit ref, branch, or tag). Defaults to the the default branch of the repository.
       use_local_service_configuration:
         type: boolean
         required: false
@@ -84,6 +89,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
+          ref: ${{ inputs.ref }}
 
       - name: Install poetry
         uses: snok/install-poetry@v1
@@ -116,6 +122,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
+          ref: ${{ inputs.ref }}
           path: remote
 
       - name: Override remote repository service configuration
