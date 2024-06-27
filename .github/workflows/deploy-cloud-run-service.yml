@@ -210,7 +210,7 @@ jobs:
         run: echo "${{ steps.deploy-service.outputs.url }}"
 
       - name: Create service revision push subscription
-        uses: octue/create-push-subscription@0.4.0
+        uses: octue/create-push-subscription@0.4.1.beta-0
         with:
           project_name: ${{ needs.info.outputs.gcp_project_name }}
           service_namespace: ${{ needs.info.outputs.gcp_resource_affix }}
