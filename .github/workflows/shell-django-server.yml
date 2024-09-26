@@ -4,9 +4,6 @@ name: shell-django-server
 on:
   workflow_call:
     inputs:
-      image:
-        type: string
-        required: true
       gcp_project_name:
         type: string
         required: true
@@ -39,10 +36,11 @@ jobs:
 
     outputs:
       branch_tag_kebab: ${{ steps.get-deployment-info.outputs.branch_tag_kebab }}
-      gcp_project_name: ${{ steps.get-deployment-info.outputs.gcp_project_name}}
-      gcp_project_number: ${{ steps.get-deployment-info.outputs.gcp_project_number}}
-      gcp_region: ${{ steps.get-deployment-info.outputs.gcp_region}}
+      gcp_project_name: ${{ steps.get-deployment-info.outputs.gcp_project_name }}
+      gcp_project_number: ${{ steps.get-deployment-info.outputs.gcp_project_number }}
+      gcp_region: ${{ steps.get-deployment-info.outputs.gcp_region }}
       gcp_resource_affix: ${{ steps.get-deployment-info.outputs.gcp_resource_affix }}
+      image_version_artifact: ${{ steps.get-deployment-info.outputs.image_version_artifact }}
 
     steps:
       - name: Checkout
@@ -146,7 +144,7 @@ jobs:
             --volume ${{ steps.authoverride.outputs.credentials_file_path }}:/workspace/${{ steps.authoverride.outputs.credentials_file_name }} \
             -it \
             --rm \
-            ${{ inputs.image }} \
+            ${{ needs.info.outputs.image_version_artifact }} \
             bash
           " >> start.sh
           echo "Exec into the container by running "sh start.sh"."
