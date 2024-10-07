@@ -25,6 +25,10 @@ on:
       database_name:
         type: string
         required: true
+      env_vars:
+        type: string
+        required: false
+        description: 'Additional environment variables to pass to the the container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20".'
 
 jobs:
   info:
@@ -132,6 +136,7 @@ jobs:
           echo "GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
           echo "GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
           echo "GCP_TASKS_DOMAIN=https://doesnt-matter-because-tasks-should-get-mocked.com" >> .env
+          echo "${{ inputs.env_vars//,/\\n }}" >> .env
 
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
