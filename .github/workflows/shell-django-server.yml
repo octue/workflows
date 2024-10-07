@@ -132,7 +132,9 @@ jobs:
           ENV_VARS=${{ inputs.env_vars }}
           ENV_VARS="${ENV_VARS//,/$'\n'}"
           echo $ENV_VARS
-          echo "env_vars=$ENV_VARS" >> $GITHUB_OUTPUT
+          echo 'env_vars<<EOF' >> $GITHUB_OUTPUT
+          echo "$ENV_VARS" >> $GITHUB_OUTPUT
+          echo EOF >> $GITHUB_OUTPUT
 
       - name: Set dotenv
         run: |
