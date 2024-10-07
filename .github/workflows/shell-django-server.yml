@@ -126,6 +126,14 @@ jobs:
           echo "Credentials credentials_file_name: ${{ steps.authoverride.outputs.credentials_file_name }}"
           echo "Credentials credentials_file_path: ${{ steps.authoverride.outputs.credentials_file_path }}"
 
+      - name: Put environment variables on newlines
+        id: env-vars
+        run: |
+          ENV_VARS=${{ inputs.env_vars }}
+          ENV_VARS="${ENV_VARS//,/\n}"
+          echo $ENV_VARS
+          echo "env_vars=$ENV_VARS" >> $GITHUB_OUTPUT
+
       - name: Set dotenv
         run: |
           touch .env
@@ -136,7 +144,7 @@ jobs:
           echo "GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
           echo "GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
           echo "GCP_TASKS_DOMAIN=https://doesnt-matter-because-tasks-should-get-mocked.com" >> .env
-          echo "${{ inputs.env_vars//,/\\n }}" >> .env
+          echo "${{ steps.env-vars.outputs.env_vars }}" >> .env
 
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
