@@ -130,7 +130,7 @@ jobs:
         id: env-vars
         run: |
           ENV_VARS=${{ inputs.env_vars }}
-          ENV_VARS="${ENV_VARS//,/\\n}"
+          ENV_VARS="${ENV_VARS//,/$'\n'}"
           echo $ENV_VARS
           echo "env_vars=$ENV_VARS" >> $GITHUB_OUTPUT
 
