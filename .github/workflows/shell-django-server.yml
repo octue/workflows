@@ -141,7 +141,7 @@ jobs:
           if [ ${{ inputs.env_vars }} ]; then
             split_env_vars=($(echo ${{ inputs.env_vars }} | tr "," "\n"))
           
-          for var in "${split_env_vars[@]}"
+          for var in "${split_env_vars[@]}";
           do
               echo "$var" >> .env
           done
