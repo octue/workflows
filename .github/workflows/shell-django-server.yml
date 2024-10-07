@@ -143,7 +143,7 @@ jobs:
           
           for var in "${split_env_vars[@]}"
           do
-              echo "${{ var }}" >> .env
+              echo "$var" >> .env
           done
 
       - name: Configure Docker for GCP
