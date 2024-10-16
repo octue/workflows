@@ -294,10 +294,10 @@ jobs:
             --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
             -it \
             --rm \
-            ${{ github.event.inputs.image_version_artifact }} \
+            ${{ needs.info.outputs.image_version_artifact }} \
             bash
           " >> start.sh
-          echo "Exec into the container by running `sh start.sh`."
+          echo "Exec into the container by running "sh start.sh"."
 
       - name: Setup tmate session [DEBUG]
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'}}
