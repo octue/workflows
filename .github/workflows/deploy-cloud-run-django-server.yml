@@ -46,6 +46,11 @@ on:
         required: false
         default: ""
         description: Defaults to "<server_name>.settings"
+      env_vars:
+        type: string
+        required: false
+        default: ''
+        description: 'Additional environment variables to pass to the the container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20".'
       gcp_secrets:
         type: string
         required: false
@@ -244,7 +249,7 @@ jobs:
             echo "django_settings_module=${{ inputs.django_settings_module }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set dotenv
+      - name: Set environment variables in .env file
         # Set here rather than piped directly to the container, to allow us to usefully debug later steps of this action via reverse shell
         run: |
           touch .env
@@ -255,6 +260,16 @@ jobs:
           echo "GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
           echo "GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> .env
           echo "GCP_TASKS_DOMAIN=https://doesnt-matter-because-tasks-should-get-mocked.com" >> .env
+
+      - name: Add additional envvars to .env file
+        if: ${{ inputs.env_vars != '' }}
+        run: |
+          split_env_vars=($(echo ${{ inputs.env_vars }} | tr "," "\n"))
+
+          for var in "${split_env_vars[@]}";
+          do
+            echo "$var" >> .env
+          done
 
       - name: Add secrets to .env file
         if: ${{ inputs.gcp_secrets != '' }}
