@@ -46,6 +46,12 @@ on:
         required: false
         default: ""
         description: Defaults to "<server_name>.settings"
+      gcp_secrets:
+        type: string
+        required: false
+        default: ''
+        description: 'Secrets from GCP Secret Manager to pass to the environment. Provide in comma-separated form e.g. "first-secret,second-secret"'
+
 
     secrets:
       build_secrets:
@@ -206,6 +212,7 @@ jobs:
             DATABASE_URL:${{ steps.secrets_prefix.outputs.prefix }}-db-proxy-uri
             DJANGO_SECRET_KEY:${{ steps.secrets_prefix.outputs.prefix }}-django-secret-key
             GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}-google-application-credentials
+            $(echo ${{ inputs.gcp_secrets }} | tr "," "\n")
 
       - name: Connect to Cloud SQL
         # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
