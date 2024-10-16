@@ -265,7 +265,7 @@ jobs:
           echo "docker run \
             --network="host" \
             --env-file .env \
-            --volume ${{ steps.authoverride.outputs.credentials_file_path }}:/workspace/${{ steps.authoverride.outputs.credentials_file_name }} \
+            --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
             -it \
             --rm \
             ${{ github.event.inputs.image_version_artifact }} \
