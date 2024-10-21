@@ -340,7 +340,7 @@ jobs:
       #     env_vars: |
       #       ATOMIC_REQUESTS=0
       #       GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}
-      #       GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-primary
+      #       GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-default
       #       GCP_TASKS_DOMAIN=https://sha${{ needs.info.outputs.short_sha }}---${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-worker-fhngvhbkyq-ew.a.run.app/
       #     image: ${{ needs.info.outputs.image_version_artifact }}
       #     region: ${{ needs.info.outputs.gcp_region }}
@@ -358,7 +358,7 @@ jobs:
           env_vars: |
             DJANGO_SETTINGS_MODULE=${{ steps.django-settings.outputs.django_settings_module }}
             GCP_TASKS_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}
-            GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-primary
+            GCP_TASKS_DEFAULT_QUEUE_NAME=${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-default
             GCP_TASKS_DOMAIN=https://sha${{ needs.info.outputs.short_sha }}---${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}-${{ needs.info.outputs.server_name }}-${{ inputs.cloud_run_base_url }}
           image: ${{ needs.info.outputs.image_version_artifact }}
           region: ${{ needs.info.outputs.gcp_region }}
