@@ -203,6 +203,10 @@ jobs:
       - name: Show SecretManager prefix
         run: |
           echo "Secretmanager prefix: ${{ steps.secrets_prefix.outputs.prefix }}"
+          
+      - name: Split secrets on to new lines
+        id: split-secrets
+        run: echo "secrets=$(echo ${{ inputs.gcp_secrets }} | tr "," "\n")" >> $GITHUB_OUTPUT
 
       - name: Access GCP SecretManager
         id: secrets
@@ -212,7 +216,7 @@ jobs:
             DATABASE_URL:${{ steps.secrets_prefix.outputs.prefix }}-db-proxy-uri
             DJANGO_SECRET_KEY:${{ steps.secrets_prefix.outputs.prefix }}-django-secret-key
             GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}-google-application-credentials
-            $(echo ${{ inputs.gcp_secrets }} | tr "," "\n")
+            ${{ steps.split-secrets.outputs.secrets }}
 
       - name: Connect to Cloud SQL
         # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
