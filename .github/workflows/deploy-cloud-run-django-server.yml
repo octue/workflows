@@ -367,7 +367,7 @@ jobs:
           flags: ${{ inputs.cloud_run_flags }}
 
       # TODO unapply the migration if it or the deployment(s) failed
-      # - name: Show Cloud Run Deployment URLs
-      #   run: |
+      - name: Show Cloud Run Deployment URLs
+        run: |
+          echo "${{ steps.deploy-server.outputs.url }}"
       #     echo "${{ steps.deploy-worker.outputs.url }}"
-      #     echo "${{ steps.deploy-server.outputs.url }}"
