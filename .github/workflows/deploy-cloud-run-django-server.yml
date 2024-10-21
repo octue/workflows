@@ -23,10 +23,6 @@ on:
       cloud_run_base_url:
         type: string
         required: true
-      gcp_environment:
-        type: string
-        required: false
-        default: 'main'
       dockerfile:
         type: string
         required: false
@@ -97,14 +93,13 @@ jobs:
 
       - name: Get deployment info
         id: get-deployment-info
-        uses: octue/get-deployment-info@0.2.1
+        uses: octue/get-deployment-info@0.3.3
         with:
           gcp_project_name: ${{ inputs.gcp_project_name }}
           gcp_project_number: ${{ inputs.gcp_project_number }}
           gcp_region: ${{ inputs.gcp_region }}
           gcp_resource_affix: ${{ inputs.gcp_resource_affix }}
           gcp_service_name: ${{ inputs.server_name }}
-          gcp_environment: ${{ inputs.gcp_environment }}
 
   build:
     runs-on: ubuntu-latest
