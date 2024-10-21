@@ -223,7 +223,7 @@ jobs:
         # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
         uses: wagnerpereira/gce-cloudsql-proxy-action@v2
         with:
-          instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:primary
+          instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:${{ needs.info.outputs.gcp_resource_affix }}-dbinstance-${{ needs.info.outputs.branch_tag_kebab }}
 
       - name: Store GCP credentials in a file
         # Pipe the credentials secret value to disk, allowing it to be mounted in the container just like in cloud run.
@@ -317,7 +317,7 @@ jobs:
             --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
             --rm \
             ${{ needs.info.outputs.image_version_artifact }} \
-            python manage.py collectstatic --no-input
+            python manage.py collectstatic -v2 --no-input
 
       - name: Migrate database (in cloud run equivalent environment)
         id: migrate-database
@@ -330,7 +330,7 @@ jobs:
             --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
             --rm \
             ${{ needs.info.outputs.image_version_artifact }} \
-            python manage.py migrate --no-input
+            python manage.py migrate -v2 --no-input
 
       # - name: Deploy to Cloud Run Worker
       #   id: deploy-worker
