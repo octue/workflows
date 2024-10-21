@@ -211,7 +211,7 @@ jobs:
         # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
         uses: wagnerpereira/gce-cloudsql-proxy-action@v2
         with:
-          instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:primary
+          instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:${{ needs.info.outputs.gcp_resource_affix }}-dbinstance-${{ needs.info.outputs.branch_tag_kebab }}
 
       - name: Store GCP credentials in a file
         # Pipe the credentials secret value to disk, allowing it to be mounted in the container just like in cloud run.
