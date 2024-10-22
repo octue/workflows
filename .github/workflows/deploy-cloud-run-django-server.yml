@@ -195,16 +195,13 @@ jobs:
       - name: Setup GCloud CLI
         uses: "google-github-actions/setup-gcloud@v2"
 
-      - name: Get SecretManager prefix
+      - name: Get and show Secret Manager prefix
         id: secrets_prefix
         run: |
           echo "prefix=${{ needs.info.outputs.gcp_project_name }}/${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> $GITHUB_OUTPUT
+          echo "Secret Manager prefix: ${{ steps.secrets_prefix.outputs.prefix }}"
 
-      - name: Show SecretManager prefix
-        run: |
-          echo "Secretmanager prefix: ${{ steps.secrets_prefix.outputs.prefix }}"
-
-      - name: Access GCP SecretManager
+      - name: Access GCP Secret Manager
         id: secrets
         uses: "google-github-actions/get-secretmanager-secrets@v2"
         with:
