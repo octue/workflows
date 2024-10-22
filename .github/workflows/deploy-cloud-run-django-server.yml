@@ -194,8 +194,9 @@ jobs:
       - name: Get and show Secret Manager prefix
         id: secrets_prefix
         run: |
-          echo "prefix=${{ needs.info.outputs.gcp_project_name }}/${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}" >> $GITHUB_OUTPUT
-          echo "Secret Manager prefix: ${{ steps.secrets_prefix.outputs.prefix }}"
+          export prefix=${{ needs.info.outputs.gcp_project_name }}/${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.branch_tag_kebab }}
+          echo "prefix=$prefix" >> $GITHUB_OUTPUT
+          echo "Secret Manager prefix: $prefix"
 
       - name: Access GCP Secret Manager
         id: secrets
