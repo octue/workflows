@@ -268,7 +268,7 @@ jobs:
         run: |
           for name, secret in ${{ steps.secrets.outputs }};
           do
-            echo "$name=$secret" >> .env
+            echo "${{ name }}=${{ secret }}" >> .env
           done
 
       - name: Configure Docker for GCP
