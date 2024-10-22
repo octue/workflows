@@ -263,12 +263,18 @@ jobs:
             echo "$var" >> .env
           done
 
+      - name: TEST - show secret manager step outputs
+        run: echo ${{ steps.secrets.outputs }}
+
+      - name: TEST - get all secret manager step outputs
+        run: echo ${{ steps.secrets.outputs.* }}
+
       - name: Add secrets to .env file
         if: ${{ inputs.gcp_secrets != '' }}
         run: |
-          for name, secret in ${{ steps.secrets.outputs }};
+          for value in ${{ steps.secrets.outputs.* }};
           do
-            echo "${{ name }}=${{ secret }}" >> .env
+            echo "$value" >> .env
           done
 
       - name: Configure Docker for GCP
