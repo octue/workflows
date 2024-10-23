@@ -281,7 +281,7 @@ jobs:
         run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
 
       - name: Create start script and print instructions [DEBUG]
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'}}
+#        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'}}
         run: |
           echo "docker run \
             --network="host" \
@@ -295,7 +295,7 @@ jobs:
           echo "Exec into the container by running "sh start.sh"."
 
       - name: Setup tmate session [DEBUG]
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'}}
+#        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'}}
         uses: mxschmitt/action-tmate@v3
         env:
           PERSONAL_ACCESS_TOKEN_GITHUB: ${{ secrets.PACKAGE_TOKEN_GITHUB }}
