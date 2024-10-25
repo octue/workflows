@@ -264,14 +264,12 @@ jobs:
           done
 
       - name: Export secrets to JSON
-        if: ${{ inputs.gcp_secrets != '' }}
         run: echo '${{ toJSON(steps.secrets.outputs) }}' >> secrets.json
 
       - name: Remove GOOGLE_APPLICATION_CREDENTIALS value from secrets.json
         run: jq 'del(.GOOGLE_APPLICATION_CREDENTIALS)' secrets.json > secrets2.json
 
       - name: Add secrets to .env file
-        if: ${{ inputs.gcp_secrets != '' }}
         run: |
           function append_json_to_env () {
             INPUT_FILE="${1}"
