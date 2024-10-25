@@ -43,12 +43,12 @@ on:
         type: string
         required: false
         default: ''
-        description: 'Additional environment variables to pass to the the container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20".'
+        description: 'Additional environment variables to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20".'
       gcp_secrets:
         type: string
         required: false
         default: ''
-        description: 'Secrets from GCP Secret Manager to pass to the environment and the name to give them as an output. Provide comma-separated in the form "REFERENCE:secret-path" e.g. "FIRST_SECRET:my-project/first-secret,SECOND_SECRET:my-project/second-secret"'
+        description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-path" e.g. "FIRST_SECRET:my-project/first-secret,SECOND_SECRET:my-project/second-secret"'
 
     secrets:
       build_secrets:
