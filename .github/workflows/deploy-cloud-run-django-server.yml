@@ -251,7 +251,7 @@ jobs:
           echo "GCP_TASKS_DOMAIN=https://doesnt-matter-because-tasks-should-get-mocked.com" >> .env
           echo "GCP_REGION=${{ needs.info.outputs.gcp_region }}" >> .env
           echo "GCP_RESOURCE_AFFIX=${{ needs.info.outputs.gcp_resource_affix }}" >> .env
-          echo "GCP_ENVIRONMENT=${{ needs.info.outputs.gcp_environment_kebab }}" >> .env
+          echo "GCP_ENVIRONMENT=${{ needs.info.outputs.branch_tag_kebab }}" >> .env
 
       - name: Add additional envvars to .env file
         if: ${{ inputs.env_vars != '' }}
