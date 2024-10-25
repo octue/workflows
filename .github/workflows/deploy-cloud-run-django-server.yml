@@ -267,6 +267,9 @@ jobs:
         if: ${{ inputs.gcp_secrets != '' }}
         run: echo '${{ toJSON(steps.secrets.outputs) }}' >> secrets.json
 
+      - name: Remove GOOGLE_APPLICATION_CREDENTIALS value from secrets.json
+        run: jq 'del(.GOOGLE_APPLICATION_CREDENTIALS)' secrets.json > secrets2.json
+
       - name: Add secrets to .env file
         if: ${{ inputs.gcp_secrets != '' }}
         run: |
@@ -284,7 +287,7 @@ jobs:
             )
           }
           
-          append_json_to_env secrets.json
+          append_json_to_env secrets2.json
 
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
