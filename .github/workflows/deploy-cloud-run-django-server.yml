@@ -205,14 +205,14 @@ jobs:
           import os
           
           prefix = "${{ steps.secrets_prefix.outputs.prefix }}-"
-          secrets = tuple(secret.split(":") for secret in "${{ inputs.gcp_secrets }}".split(","))
-          secrets_output = []
+          secrets = []
           
-          for name, value in secrets:
-              secrets_output.append(f"{name}:{prefix + value}")
+          for secret in "${{ inputs.gcp_secrets }}".split(","): 
+              name, value = secret.split(":")
+              secrets.append(f"{name}:{prefix + value}")
             
-          with open(os.environ["GITHUB_OUTPUT"], 'a') as f:
-              f.write(f"secrets={','.join(secrets_output)}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"secrets={','.join(secrets)}")
 
       - name: Access GCP Secret Manager
         id: secrets
