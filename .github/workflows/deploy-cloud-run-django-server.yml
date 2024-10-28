@@ -48,7 +48,7 @@ on:
         type: string
         required: false
         default: ''
-        description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-path" e.g. "FIRST_SECRET:my-project/first-secret,SECOND_SECRET:my-project/second-secret"'
+        description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-name" e.g. "FIRST_SECRET:first-secret,SECOND_SECRET:second-secret". A prefix of "<gcp_project_name>/<outputs.gcp_resource_affix>-<branch>-" is automatically added to each secret.'
 
     secrets:
       build_secrets:
@@ -198,6 +198,22 @@ jobs:
           echo "prefix=$prefix" >> $GITHUB_OUTPUT
           echo "Secret Manager prefix: $prefix"
 
+      - name: Add secrets prefix to gcp_secrets
+        id: prepare_gcp_secrets
+        shell: python
+        run: |
+          import os
+          
+          prefix = "${{ steps.secrets_prefix.outputs.prefix }}-"
+          secrets = tuple(secret.split(":") for secret in inputs.gcp_secrets.split(","))
+          secrets_output = []
+          
+          for name, value in secrets:
+              secrets_output.append(f"{name}:{prefix + value}")
+            
+          with open(os.environ["GITHUB_OUTPUT"], 'a') as f:
+              f.write(f"secrets={','.join(secrets_output)}")
+
       - name: Access GCP Secret Manager
         id: secrets
         uses: "google-github-actions/get-secretmanager-secrets@v2"
@@ -206,7 +222,7 @@ jobs:
             DATABASE_URL:${{ steps.secrets_prefix.outputs.prefix }}-db-proxy-uri
             DJANGO_SECRET_KEY:${{ steps.secrets_prefix.outputs.prefix }}-django-secret-key
             GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}-google-application-credentials
-            ${{ inputs.gcp_secrets }}
+            ${{ steps.prepare_gcp_secrets.outputs.secrets }}
 
       - name: Connect to Cloud SQL
         # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
