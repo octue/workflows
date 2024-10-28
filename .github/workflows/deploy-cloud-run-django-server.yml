@@ -221,7 +221,6 @@ jobs:
           secrets: |-
             DATABASE_URL:${{ steps.secrets_prefix.outputs.prefix }}-db-proxy-uri
             DJANGO_SECRET_KEY:${{ steps.secrets_prefix.outputs.prefix }}-django-secret-key
-            GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}-google-application-credentials
             ${{ steps.prepare_gcp_secrets.outputs.secrets }}
 
       - name: Connect to Cloud SQL
@@ -230,6 +229,13 @@ jobs:
         with:
           instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:${{ needs.info.outputs.gcp_resource_affix }}-dbinstance-${{ needs.info.outputs.branch_tag_kebab }}
 
+      - name: Get GCP credentials
+        id: gcp-credentials
+        uses: "google-github-actions/get-secretmanager-secrets@v2"
+        with:
+          secrets: |-
+            GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}-google-application-credentials
+
       - name: Store GCP credentials in a file
         # Pipe the credentials secret value to disk, allowing it to be mounted in the container just like in cloud run.
         # This lets us use the same secrets pattern as the cloud run service to do the release.
@@ -237,7 +243,7 @@ jobs:
         run: |
           FILENAME=gha-creds-from-secret-manager.json
           echo "credentials_file_name=$FILENAME" >> $GITHUB_OUTPUT
-          echo '${{ steps.secrets.outputs.GOOGLE_APPLICATION_CREDENTIALS }}' > $(pwd)/$FILENAME
+          echo '${{ steps.gcp-credentials.outputs.GOOGLE_APPLICATION_CREDENTIALS }}' > $(pwd)/$FILENAME
           echo "credentials_file_path=$(pwd)/$FILENAME" >> $GITHUB_OUTPUT
 
       - name: Show credentials filename and path
@@ -282,9 +288,6 @@ jobs:
       - name: Export secrets to JSON
         run: echo '${{ toJSON(steps.secrets.outputs) }}' >> secrets.json
 
-      - name: Remove GOOGLE_APPLICATION_CREDENTIALS value from secrets.json
-        run: jq 'del(.GOOGLE_APPLICATION_CREDENTIALS)' secrets.json > secrets2.json
-
       - name: Add secrets to .env file
         run: |
           function append_json_to_env () {
@@ -301,7 +304,7 @@ jobs:
             )
           }
           
-          append_json_to_env secrets2.json
+          append_json_to_env secrets.json
 
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
