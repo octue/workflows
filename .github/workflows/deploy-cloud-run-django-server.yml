@@ -48,7 +48,7 @@ on:
         type: string
         required: false
         default: ''
-        description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-name" e.g. "FIRST_SECRET:first-secret,SECOND_SECRET:second-secret". A prefix of "<gcp_project_name>/<outputs.gcp_resource_affix>-<branch>-" is automatically added to each secret.'
+        description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-name" e.g. "FIRST_SECRET:first-secret,SECOND_SECRET:second-secret". A prefix of "<gcp_project_name>/<gcp_resource_affix>-<branch_name>-" is automatically added to each secret.'
 
     secrets:
       build_secrets:
@@ -205,7 +205,7 @@ jobs:
           import os
           
           prefix = "${{ steps.secrets_prefix.outputs.prefix }}-"
-          secrets = tuple(secret.split(":") for secret in inputs.gcp_secrets.split(","))
+          secrets = tuple(secret.split(":") for secret in "${{ inputs.gcp_secrets }}".split(","))
           secrets_output = []
           
           for name, value in secrets:
