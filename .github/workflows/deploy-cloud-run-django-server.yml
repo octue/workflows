@@ -48,7 +48,7 @@ on:
         type: string
         required: false
         default: ''
-        description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-path" e.g. "FIRST_SECRET:my-project/first-secret,SECOND_SECRET:my-project/second-secret"'
+        description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-name" e.g. "FIRST_SECRET:first-secret,SECOND_SECRET:second-secret". A prefix of "<gcp_project_name>/<gcp_resource_affix>-<branch_name>-" is automatically added to each secret.'
 
     secrets:
       build_secrets:
@@ -198,6 +198,22 @@ jobs:
           echo "prefix=$prefix" >> $GITHUB_OUTPUT
           echo "Secret Manager prefix: $prefix"
 
+      - name: Add secrets prefix to gcp_secrets
+        id: prepare_gcp_secrets
+        shell: python
+        run: |
+          import os
+          
+          prefix = "${{ steps.secrets_prefix.outputs.prefix }}-"
+          secrets = []
+          
+          for secret in "${{ inputs.gcp_secrets }}".split(","): 
+              name, value = secret.split(":")
+              secrets.append(f"{name}:{prefix + value}")
+            
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"secrets={','.join(secrets)}")
+
       - name: Access GCP Secret Manager
         id: secrets
         uses: "google-github-actions/get-secretmanager-secrets@v2"
@@ -205,14 +221,20 @@ jobs:
           secrets: |-
             DATABASE_URL:${{ steps.secrets_prefix.outputs.prefix }}-db-proxy-uri
             DJANGO_SECRET_KEY:${{ steps.secrets_prefix.outputs.prefix }}-django-secret-key
-            GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}-google-application-credentials
-            ${{ inputs.gcp_secrets }}
+            ${{ steps.prepare_gcp_secrets.outputs.secrets }}
 
       - name: Connect to Cloud SQL
         # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
         uses: wagnerpereira/gce-cloudsql-proxy-action@v2
         with:
           instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:${{ needs.info.outputs.gcp_resource_affix }}-dbinstance-${{ needs.info.outputs.branch_tag_kebab }}
+
+      - name: Get GCP credentials
+        id: gcp-credentials
+        uses: "google-github-actions/get-secretmanager-secrets@v2"
+        with:
+          secrets: |-
+            GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}-google-application-credentials
 
       - name: Store GCP credentials in a file
         # Pipe the credentials secret value to disk, allowing it to be mounted in the container just like in cloud run.
@@ -221,7 +243,7 @@ jobs:
         run: |
           FILENAME=gha-creds-from-secret-manager.json
           echo "credentials_file_name=$FILENAME" >> $GITHUB_OUTPUT
-          echo '${{ steps.secrets.outputs.GOOGLE_APPLICATION_CREDENTIALS }}' > $(pwd)/$FILENAME
+          echo '${{ steps.gcp-credentials.outputs.GOOGLE_APPLICATION_CREDENTIALS }}' > $(pwd)/$FILENAME
           echo "credentials_file_path=$(pwd)/$FILENAME" >> $GITHUB_OUTPUT
 
       - name: Show credentials filename and path
@@ -266,9 +288,6 @@ jobs:
       - name: Export secrets to JSON
         run: echo '${{ toJSON(steps.secrets.outputs) }}' >> secrets.json
 
-      - name: Remove GOOGLE_APPLICATION_CREDENTIALS value from secrets.json
-        run: jq 'del(.GOOGLE_APPLICATION_CREDENTIALS)' secrets.json > secrets2.json
-
       - name: Add secrets to .env file
         run: |
           function append_json_to_env () {
@@ -285,7 +304,7 @@ jobs:
             )
           }
           
-          append_json_to_env secrets2.json
+          append_json_to_env secrets.json
 
       - name: Configure Docker for GCP
         run: gcloud auth configure-docker ${{ needs.info.outputs.gcp_region }}-docker.pkg.dev
