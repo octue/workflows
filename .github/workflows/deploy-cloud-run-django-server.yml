@@ -33,7 +33,7 @@ on:
       cloud_run_flags:
         type: string
         required: false
-        default: '--ingress=all --allow-unauthenticated'
+        default: "--ingress=all --allow-unauthenticated"
       django_settings_module:
         type: string
         required: false
@@ -42,19 +42,23 @@ on:
       env_vars:
         type: string
         required: false
-        default: ''
+        default: ""
         description: 'Additional environment variables to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20".'
       gcp_secrets:
         type: string
         required: false
-        default: ''
+        default: ""
         description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-name" e.g. "FIRST_SECRET:first-secret,SECOND_SECRET:second-secret". A prefix of "<gcp_project_name>/<gcp_resource_affix>-<branch_name>-" is automatically added to each secret.'
+      sync_stripe:
+        type: boolean
+        required: false
+        default: false
+        description: "Run management command to sync stripe models. Defaults to false."
 
     secrets:
       build_secrets:
         description: "Line-separated list of build-time secrets."
         required: false
-
 
 jobs:
   info:
@@ -203,10 +207,10 @@ jobs:
         shell: python
         run: |
           import os
-          
+
           prefix = "${{ steps.secrets_prefix.outputs.prefix }}-"
           secrets = []
-          
+
           for secret in "${{ inputs.gcp_secrets }}".split(","): 
               name, value = secret.split(":")
               secrets.append(f"{name}:{prefix + value}")
@@ -303,7 +307,7 @@ jobs:
                     <(echo 'to_entries | map("\(.key)=\(.value)") | .[]')
             )
           }
-          
+
           append_json_to_env secrets.json
 
       - name: Configure Docker for GCP
@@ -355,6 +359,19 @@ jobs:
             --rm \
             ${{ needs.info.outputs.image_version_artifact }} \
             python manage.py migrate -v2 --no-input
+
+      - name: Sync stripe models (in cloud run equivalent environment)
+        id: sync-stripe-models
+        # Don't deploy if manually dispatched or debugging
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}} && ${{ inputs.sync_stripe }}
+        run: |
+          docker run \
+            --network="host" \
+            --env-file .env \
+            --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
+            --rm \
+            ${{ needs.info.outputs.image_version_artifact }} \
+            python manage.py djstripe_sync_models -v2
 
       # - name: Deploy to Cloud Run Worker
       #   id: deploy-worker
