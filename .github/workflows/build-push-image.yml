@@ -1,4 +1,4 @@
-# Build and push an image to an artifact registry, optionally registering it with a service registry.
+# Build and push an Octue Twined service revision image to an artifact registry, optionally registering it with a service registry.
 
 name: build-push-image
 
@@ -127,11 +127,11 @@ jobs:
           path: remote
 
       - name: Override remote repository service configuration
-        if: ${{ (inputs.repository != '') && (inputs.use_local_service_configuration != '') }}
+        if: ${{ (inputs.repository != '') && (inputs.use_local_service_configuration == 'true') }}
         run: cp octue.yaml remote/octue.yaml
 
       - name: Override remote repository app configuration
-        if: ${{ (inputs.repository != '') && (inputs.use_local_app_configuration != '') }}
+        if: ${{ (inputs.repository != '') && (inputs.use_local_app_configuration == 'true') }}
         run: cp app_configuration.json remote/app_configuration.json
 
       - name: Set up QEMU
