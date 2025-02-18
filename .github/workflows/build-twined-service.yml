@@ -1,6 +1,6 @@
 # Build and push an Octue Twined service revision image to an artifact registry, optionally registering it with a service registry.
 
-name: build-push-image
+name: build-twined-service
 
 on:
   workflow_call:
