@@ -62,7 +62,7 @@ on:
         type: string
         required: false
         default: ""
-        description: 'Additional environment variables to pass to the the deployed container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20". See here for more information: https://github.com/google-github-actions/deploy-cloudrun#user-content-env_vars'
+        description: '[WARNING: CURRENTLY UNAVAILABLE] Additional environment variables to pass to the the deployed container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20". See here for more information: https://github.com/google-github-actions/deploy-cloudrun#user-content-env_vars'
 
 
 jobs:
@@ -139,7 +139,7 @@ jobs:
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Authenticate with GCP Workload Identity
         id: auth
@@ -189,7 +189,7 @@ jobs:
 
       - name: Build and push container with latest and version tags
         # Note: We don't push containers with shas because we'd end up with terabytes in storage (an image for every commit)
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: "${{ steps.choose-build-context.outputs.context }}"
           platforms: linux/amd64
