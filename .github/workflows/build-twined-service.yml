@@ -75,6 +75,7 @@ jobs:
       contents: read
 
     outputs:
+      branch_tag_kebab: ${{ steps.get-deployment-info.outputs.branch_tag_kebab}}
       image_latest_artifact: ${{ steps.get-deployment-info.outputs.image_latest_artifact}}
       image_version_artifact: ${{ steps.get-deployment-info.outputs.image_version_artifact}}
       image_default_artifact: ${{ steps.get-deployment-info.outputs.image_version_artifact}}
@@ -181,7 +182,7 @@ jobs:
       - name: Choose docker image tags
         id: image-tags
         run: |
-          if [ ${{ steps.get-deployment-info.outputs.branch_tag_kebab }} = "main" ]; then
+          if [ ${{ needs.info.outputs.branch_tag_kebab }} = "main" ]; then
             echo "tags=${{ needs.info.outputs.image_version_artifact }},${{ needs.info.outputs.image_latest_artifact }},${{ needs.info.outputs.image_default_artifact }}"
           else
             echo "tags=${{ needs.info.outputs.image_version_artifact }},${{ needs.info.outputs.image_latest_artifact }}"
