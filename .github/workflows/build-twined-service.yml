@@ -183,9 +183,9 @@ jobs:
         id: image-tags
         run: |
           if [ ${{ needs.info.outputs.branch_tag_kebab }} = "main" ]; then
-            echo "tags=${{ needs.info.outputs.image_version_artifact }},${{ needs.info.outputs.image_latest_artifact }},${{ needs.info.outputs.image_default_artifact }}"
+            echo "tags=${{ needs.info.outputs.image_version_artifact }},${{ needs.info.outputs.image_latest_artifact }},${{ needs.info.outputs.image_default_artifact }}"  >> $GITHUB_OUTPUT
           else
-            echo "tags=${{ needs.info.outputs.image_version_artifact }},${{ needs.info.outputs.image_latest_artifact }}"
+            echo "tags=${{ needs.info.outputs.image_version_artifact }},${{ needs.info.outputs.image_latest_artifact }}"  >> $GITHUB_OUTPUT
           fi
 
       - name: Build and push container with latest and version tags
