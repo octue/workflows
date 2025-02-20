@@ -1,6 +1,6 @@
-# Deploy an Octue service to Cloud Run, optionally registering it with a service registry.
+# Build and push an Octue Twined service revision image to an artifact registry, optionally registering it with a service registry.
 
-name: deploy-cloud-run-service
+name: build-twined-service
 
 on:
   workflow_call:
@@ -27,8 +27,8 @@ on:
       dockerfile_url:
         type: string
         required: false
-        default: 'https://raw.githubusercontent.com/octue/octue-sdk-python/main/octue/cloud/deployment/google/cloud_run/Dockerfile-python311'
-        description: Use the default Octue data service dockerfile (based on python3.11).
+        default: 'https://raw.githubusercontent.com/octue/octue-sdk-python/refs/heads/rc-kueue/octue/cloud/deployment/dockerfiles/Dockerfile-python311'
+        description: Use the default Octue Twined data service dockerfile (based on python3.11).
       local_dockerfile:
         type: string
         required: false
@@ -38,10 +38,6 @@ on:
         type: string
         required: false
         default: ''
-      cloud_run_flags:
-        type: string
-        required: false
-        default: '--ingress=all --allow-unauthenticated'
       repository:
         type: string
         required: false
@@ -66,7 +62,7 @@ on:
         type: string
         required: false
         default: ""
-        description: 'Additional environment variables to pass to the the deployed container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20". See here for more information: https://github.com/google-github-actions/deploy-cloudrun#user-content-env_vars'
+        description: '[WARNING: CURRENTLY UNAVAILABLE] Additional environment variables to pass to the the deployed container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20". See here for more information: https://github.com/google-github-actions/deploy-cloudrun#user-content-env_vars'
 
 
 jobs:
@@ -79,8 +75,10 @@ jobs:
       contents: read
 
     outputs:
+      branch_tag_kebab: ${{ steps.get-deployment-info.outputs.branch_tag_kebab}}
       image_latest_artifact: ${{ steps.get-deployment-info.outputs.image_latest_artifact}}
       image_version_artifact: ${{ steps.get-deployment-info.outputs.image_version_artifact}}
+      image_default_artifact: ${{ steps.get-deployment-info.outputs.image_version_artifact}}
       gcp_project_name: ${{ steps.get-deployment-info.outputs.gcp_project_name}}
       gcp_project_number: ${{ steps.get-deployment-info.outputs.gcp_project_number}}
       gcp_region: ${{ steps.get-deployment-info.outputs.gcp_region}}
@@ -101,7 +99,7 @@ jobs:
 
       - name: Get deployment info
         id: get-deployment-info
-        uses: octue/get-deployment-info@0.3.4
+        uses: octue/get-deployment-info@0.4.1
         with:
           gcp_project_name: ${{ inputs.gcp_project_name }}
           gcp_project_number: ${{ inputs.gcp_project_number }}
@@ -131,18 +129,18 @@ jobs:
           path: remote
 
       - name: Override remote repository service configuration
-        if: ${{ (inputs.repository != '') && (inputs.use_local_service_configuration != '') }}
+        if: ${{ (inputs.repository != '') && (inputs.use_local_service_configuration == 'true') }}
         run: cp octue.yaml remote/octue.yaml
 
       - name: Override remote repository app configuration
-        if: ${{ (inputs.repository != '') && (inputs.use_local_app_configuration != '') }}
+        if: ${{ (inputs.repository != '') && (inputs.use_local_app_configuration == 'true') }}
         run: cp app_configuration.json remote/app_configuration.json
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Authenticate with GCP Workload Identity
         id: auth
@@ -181,9 +179,18 @@ jobs:
             echo "dockerfile_path=${{ steps.choose-build-context.outputs.context }}/${{ inputs.local_dockerfile }}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Choose docker image tags
+        id: image-tags
+        run: |
+          if [ ${{ needs.info.outputs.branch_tag_kebab }} = "main" ]; then
+            echo "tags=${{ needs.info.outputs.image_version_artifact }},${{ needs.info.outputs.image_latest_artifact }},${{ needs.info.outputs.image_default_artifact }}"  >> $GITHUB_OUTPUT
+          else
+            echo "tags=${{ needs.info.outputs.image_version_artifact }},${{ needs.info.outputs.image_latest_artifact }}"  >> $GITHUB_OUTPUT
+          fi
+
       - name: Build and push container with latest and version tags
         # Note: We don't push containers with shas because we'd end up with terabytes in storage (an image for every commit)
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
           context: "${{ steps.choose-build-context.outputs.context }}"
           platforms: linux/amd64
@@ -191,33 +198,7 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: |
-            ${{ needs.info.outputs.image_version_artifact}}
-            ${{ needs.info.outputs.image_latest_artifact}}
-
-      - name: Deploy to Cloud Run service
-        id: deploy-service
-        uses: google-github-actions/deploy-cloudrun@v2
-        with:
-          service: ${{ needs.info.outputs.gcp_resource_affix }}-${{ needs.info.outputs.gcp_service_name }}
-          image: ${{ needs.info.outputs.image_version_artifact }}
-          region: ${{ needs.info.outputs.gcp_region }}
-          tag: v${{ needs.info.outputs.revision_tag_slug }}
-          env_vars: "OCTUE_SERVICE_NAMESPACE=${{ needs.info.outputs.gcp_resource_affix }},OCTUE_SERVICE_NAME=${{ needs.info.outputs.gcp_service_name }},OCTUE_SERVICE_REVISION_TAG=${{ needs.info.outputs.revision_tag }},COMPUTE_PROVIDER=GOOGLE_CLOUD_RUN,${{ inputs.env_vars }}"
-          flags: "${{ inputs.cloud_run_flags }}"
-          timeout: 3600
-
-      - name: Show deployed service URL
-        run: echo "${{ steps.deploy-service.outputs.url }}"
-
-      - name: Create service revision push subscription
-        uses: octue/create-push-subscription@0.4.1
-        with:
-          project_name: ${{ needs.info.outputs.gcp_project_name }}
-          service_namespace: ${{ needs.info.outputs.gcp_resource_affix }}
-          service_name: ${{ needs.info.outputs.gcp_service_name }}
-          service_revision_tag: ${{ needs.info.outputs.revision_tag }}
-          push_endpoint: ${{ steps.deploy-service.outputs.url }}
+          tags: ${{ steps.image-tags.outputs.tags }}
 
       - name: Register service revision
         if: ${{ inputs.service_registry_endpoint != '' }}
