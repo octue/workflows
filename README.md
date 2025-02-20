@@ -6,6 +6,40 @@ Octue's reusable GitHub Actions workflows for:
 ## Deployment
 All of these reusable workflows assume the relevant Google Cloud infrastructure has already been set up.
 
+### Deploying a Kubernetes/Kueue Octue Twined service revision
+This workflow builds and deploys a revision of a dockerised Octue Twined service revision to Kubernetes/Kueue, storing 
+the image in Google Cloud Artifact Registry. If a service registry is specified, the service revision is registered with
+it. Unless another dockerfile is provided locally or from a URL, the default data service `Dockerfile` is used (based 
+on python3.11).
+
+**Example usage**
+
+Add the following job to a workflow:
+
+```shell
+...
+
+jobs:
+  ...
+  
+  deploy:
+    if: "!contains(github.event.head_commit.message, 'skipci')"
+    uses: octue/workflows/.github/workflows/build-twined-service.yml@main
+    permissions:
+      id-token: write
+      contents: read
+    with:
+      gcp_project_name: my-project
+      gcp_project_number: 1234
+      gcp_region: europe-west3
+      gcp_resource_affix: my-resource-affix
+      gcp_service_name: my-service-name
+      local_dockerfile: path/to/Dockerfile
+      service_registry_endpoint: https://example.com/integrations/octue/services
+
+  ...
+```
+
 ### Deploying a Cloud Run django server
 This workflow builds and deploys a dockerised django server to Google Cloud Run, storing the image in Google Cloud 
 Artifact Registry.
@@ -47,40 +81,6 @@ jobs:
   ...
 ```
 
-### Deploying a Cloud Run Octue service
-This workflow builds and deploys a revision of a dockerised Octue service to Google Cloud Run, storing the image in 
-Google Cloud Artifact Registry. A Google Pub/Sub push subscription is created for the revision and, if given, it's 
-registered with a service registry. By default, the default Octue data service `Dockerfile` is used (based on 
-python3.11) but any `Dockerfile` can be provided either locally or from a URL.
-
-**Example usage**
-
-Add the following job to a workflow:
-
-```shell
-...
-
-jobs:
-  ...
-  
-  deploy:
-    if: "!contains(github.event.head_commit.message, 'skipci')"
-    uses: octue/workflows/.github/workflows/deploy-cloud-run-service.yml@main
-    permissions:
-      id-token: write
-      contents: read
-    with:
-      gcp_project_name: my-project
-      gcp_project_number: 1234
-      gcp_region: europe-west3
-      gcp_resource_affix: my-resource-affix
-      gcp_service_name: my-service-name
-      local_dockerfile: path/to/Dockerfile
-      cloud_run_flags: '--ingress=all --allow-unauthenticated --service-account=my-service-service-account@my-project.iam.gserviceaccount.com --max-instances=10 --memory=2048Mi'
-      service_registry_endpoint: https://example.com/integrations/octue/services
-
-  ...
-```
 
 ### Shelling into a Cloud Run django server
 This workflow spins up a container from the provided image, populates its environment, connects the database to it, and
