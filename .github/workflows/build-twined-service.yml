@@ -78,7 +78,7 @@ jobs:
       branch_tag_kebab: ${{ steps.get-deployment-info.outputs.branch_tag_kebab}}
       image_latest_artifact: ${{ steps.get-deployment-info.outputs.image_latest_artifact}}
       image_version_artifact: ${{ steps.get-deployment-info.outputs.image_version_artifact}}
-      image_default_artifact: ${{ steps.get-deployment-info.outputs.image_version_artifact}}
+      image_default_artifact: ${{ steps.get-deployment-info.outputs.image_default_artifact}}
       gcp_project_name: ${{ steps.get-deployment-info.outputs.gcp_project_name}}
       gcp_project_number: ${{ steps.get-deployment-info.outputs.gcp_project_number}}
       gcp_region: ${{ steps.get-deployment-info.outputs.gcp_region}}
