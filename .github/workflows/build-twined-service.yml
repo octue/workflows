@@ -14,10 +14,10 @@ on:
       gcp_region:
         type: string
         required: true
-      gcp_resource_affix:
+      service_namespace:
         type: string
         required: true
-      gcp_service_name:
+      service_name:
         type: string
         required: true
       gcp_environment:
@@ -58,12 +58,6 @@ on:
         required: false
         default: false
         description: If deploying from a remote repository, override its app configuration from the local repository.
-      env_vars:
-        type: string
-        required: false
-        default: ""
-        description: '[WARNING: CURRENTLY UNAVAILABLE] Additional environment variables to pass to the the deployed container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20". See here for more information: https://github.com/google-github-actions/deploy-cloudrun#user-content-env_vars'
-
 
 jobs:
   info:
@@ -104,8 +98,8 @@ jobs:
           gcp_project_name: ${{ inputs.gcp_project_name }}
           gcp_project_number: ${{ inputs.gcp_project_number }}
           gcp_region: ${{ inputs.gcp_region }}
-          gcp_resource_affix: ${{ inputs.gcp_resource_affix }}
-          gcp_service_name: ${{ inputs.gcp_service_name }}
+          gcp_resource_affix: ${{ inputs.service_namespace }}
+          gcp_service_name: ${{ inputs.service_name }}
 
   build:
     runs-on: ubuntu-latest
