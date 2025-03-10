@@ -58,12 +58,6 @@ on:
         required: false
         default: false
         description: If deploying from a remote repository, override its app configuration from the local repository.
-      env_vars:
-        type: string
-        required: false
-        default: ""
-        description: '[WARNING: CURRENTLY UNAVAILABLE] Additional environment variables to pass to the the deployed container in comma-separated form e.g. "VAR1=SOMETHING,VAR2=20". See here for more information: https://github.com/google-github-actions/deploy-cloudrun#user-content-env_vars'
-
 
 jobs:
   info:
