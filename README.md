@@ -14,7 +14,7 @@ on python3.11).
 
 **Example usage**
 
-Add the following job to a workflow:
+Add the following job to a workflow to deploy a service called `my-org/my-service-name:<version>`:
 
 ```shell
 ...
@@ -23,8 +23,7 @@ jobs:
   ...
   
   deploy:
-    if: "!contains(github.event.head_commit.message, 'skipci')"
-    uses: octue/workflows/.github/workflows/build-twined-service.yml@main
+    uses: octue/workflows/.github/workflows/build-twined-service.yml@0.5.0
     permissions:
       id-token: write
       contents: read
@@ -32,13 +31,16 @@ jobs:
       gcp_project_name: my-project
       gcp_project_number: 1234
       gcp_region: europe-west3
-      gcp_resource_affix: my-resource-affix
-      gcp_service_name: my-service-name
+      service_namespace: my-org
+      service_name: my-service-name
       local_dockerfile: path/to/Dockerfile
       service_registry_endpoint: https://example.com/integrations/octue/services
 
   ...
 ```
+
+See [here](https://github.com/octue/example-service-kueue/blob/main/.github/workflows/release.yml) for a live example
+including automated pre-deployment testing and release of the code on GitHub.
 
 ### Deploying a Cloud Run django server
 This workflow builds and deploys a dockerised django server to Google Cloud Run, storing the image in Google Cloud 
