@@ -14,7 +14,7 @@ on:
       gcp_region:
         type: string
         required: true
-      gcp_resource_affix:
+      service_namespace:
         type: string
         required: true
       gcp_service_name:
@@ -104,7 +104,7 @@ jobs:
           gcp_project_name: ${{ inputs.gcp_project_name }}
           gcp_project_number: ${{ inputs.gcp_project_number }}
           gcp_region: ${{ inputs.gcp_region }}
-          gcp_resource_affix: ${{ inputs.gcp_resource_affix }}
+          gcp_resource_affix: ${{ inputs.service_namespace }}
           gcp_service_name: ${{ inputs.gcp_service_name }}
 
   build:
