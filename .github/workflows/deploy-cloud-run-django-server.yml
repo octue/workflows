@@ -388,13 +388,30 @@ jobs:
       #     service: example-worker-${{ needs.info.outputs.branch_tag_kebab }}
       #     tag: sha${{ needs.info.outputs.short_sha }}
 
+      # Same as `prepare_gcp_secrets` step but uses "=" instead of ":" for the `KEY=VALUE` separator.
+      - name: Add secrets prefix to gcp_secrets for Cloud Run
+        id: prepare_gcp_secrets_for_cloud_run
+        shell: python
+        run: |
+          import os
+
+          prefix = "${{ steps.secrets_prefix.outputs.prefix }}-"
+          secrets = []
+
+          for secret in "${{ inputs.gcp_secrets }}".split(","): 
+              name, value = secret.split("=")
+              secrets.append(f"{name}={prefix + value}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"secrets={','.join(secrets)}")
+
       - name: Deploy to Cloud Run Server
         id: deploy-server
         # Don't deploy if manually dispatched or debugging
         if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          secrets: ${{ steps.prepare_gcp_secrets.outputs.secrets }}
+          secrets: ${{ steps.prepare_gcp_secrets_for_cloud_run.outputs.secrets }}
           # Currently places tasks onto itself. To place tasks onto a worker, use the following:
           # GCP_TASKS_DOMAIN=${{ steps.deploy_worker.outputs.url }}
           env_vars: |
