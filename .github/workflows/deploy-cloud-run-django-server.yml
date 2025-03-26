@@ -48,7 +48,7 @@ on:
         type: string
         required: false
         default: ""
-        description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-name" e.g. "FIRST_SECRET:first-secret,SECOND_SECRET:second-secret". A prefix of "<gcp_project_name>/<gcp_resource_affix>-<branch_name>-" is automatically added to each secret.'
+        description: 'Secrets from GCP Secret Manager to use with the `collectstatic`, `migrate`, and Cloud Run deployment steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE=secret-name" e.g. "FIRST_SECRET=first-secret,SECOND_SECRET=second-secret". A prefix of "<gcp_project_name>/<gcp_resource_affix>-<branch_name>-" is automatically added to each secret.'
       sync_stripe:
         type: boolean
         required: false
@@ -212,7 +212,7 @@ jobs:
           secrets = []
 
           for secret in "${{ inputs.gcp_secrets }}".split(","): 
-              name, value = secret.split(":")
+              name, value = secret.split("=")
               secrets.append(f"{name}:{prefix + value}")
             
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
