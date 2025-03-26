@@ -394,6 +394,7 @@ jobs:
         if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
         uses: google-github-actions/deploy-cloudrun@v2
         with:
+          secrets: ${{ steps.prepare_gcp_secrets.outputs.secrets }}
           # Currently places tasks onto itself. To place tasks onto a worker, use the following:
           # GCP_TASKS_DOMAIN=${{ steps.deploy_worker.outputs.url }}
           env_vars: |
