@@ -27,7 +27,7 @@ on:
       dockerfile_url:
         type: string
         required: false
-        default: 'https://raw.githubusercontent.com/octue/octue-sdk-python/refs/heads/rc-kueue/octue/cloud/deployment/dockerfiles/Dockerfile-python311'
+        default: 'https://raw.githubusercontent.com/octue/octue-sdk-python/refs/heads/main/octue/cloud/deployment/dockerfiles/Dockerfile-python311'
         description: Use the default Octue Twined data service dockerfile (based on python3.11).
       local_dockerfile:
         type: string
