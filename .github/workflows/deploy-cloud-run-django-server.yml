@@ -367,7 +367,7 @@ jobs:
       - name: Sync stripe models (in cloud run equivalent environment)
         id: sync-stripe-models
         # Don't deploy if manually dispatched or debugging
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}} && ${{ inputs.sync_stripe }}
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}} && ${{ inputs.sync_stripe != 'true' }}
         run: |
           docker run \
             --network="host" \
