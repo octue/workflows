@@ -106,7 +106,7 @@ jobs:
           secrets: |-
             DATABASE_URL:${{ steps.secrets_prefix.outputs.prefix }}database-proxy-url${{ steps.secrets_prefix.outputs.suffix }}
             DJANGO_SECRET_KEY:${{ steps.secrets_prefix.outputs.prefix }}django-secret-key${{ steps.secrets_prefix.outputs.suffix }}
-            GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}google-application-credentials{{ steps.secrets_prefix.outputs.suffix }}
+            GOOGLE_APPLICATION_CREDENTIALS:${{ steps.secrets_prefix.outputs.prefix }}google-application-credentials${{ steps.secrets_prefix.outputs.suffix }}
 
       - name: Connect to Cloud SQL
         # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
