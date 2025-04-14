@@ -22,9 +22,6 @@ on:
       settings_module:
         type: string
         required: true
-      database_name:
-        type: string
-        required: true
       env_vars:
         type: string
         required: false
@@ -112,7 +109,7 @@ jobs:
         # Note the DATABASE_URL should point to the proxy, i.e. localhost:5432, not to the actual DB
         uses: wagnerpereira/gce-cloudsql-proxy-action@v2
         with:
-          instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:${{ inputs.database_name }}
+          instance: ${{ needs.info.outputs.gcp_project_name }}:${{ needs.info.outputs.gcp_region }}:${{ needs.info.outputs.gcp_resource_affix }}--dbinstance--${{ needs.info.outputs.branch_tag_kebab }}
 
       - name: Prepare credentials
         # Pipe the credentials secret value to disk, allowing it to be mounted in the container just like in cloud run
