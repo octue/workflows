@@ -49,11 +49,6 @@ on:
         required: false
         default: ""
         description: 'Secrets from GCP Secret Manager to use with the `collectstatic` and `migrate` steps. Provide in comma-separated form with each secret in the form "ENVIRONMENT_VARIABLE:secret-name" e.g. "FIRST_SECRET:first-secret,SECOND_SECRET:second-secret". A prefix of "<gcp_project_name>/<gcp_resource_affix>-<branch_name>-" is automatically added to each secret.'
-      sync_stripe:
-        type: boolean
-        required: false
-        default: false
-        description: "Run management command to sync stripe models. Defaults to false."
 
     secrets:
       build_secrets:
@@ -363,19 +358,6 @@ jobs:
             --rm \
             ${{ needs.info.outputs.image_version_artifact }} \
             python manage.py migrate -v2 --no-input
-
-      - name: Sync stripe models (in cloud run equivalent environment)
-        id: sync-stripe-models
-        # Don't deploy if manually dispatched or debugging
-        if: ${{ inputs.sync_stripe == 'true' }} && ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.debug_enabled != 'true'}}
-        run: |
-          docker run \
-            --network="host" \
-            --env-file .env \
-            --volume ${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_path }}:/workspace/${{ steps.store-gcp-credentials-in-file.outputs.credentials_file_name }} \
-            --rm \
-            ${{ needs.info.outputs.image_version_artifact }} \
-            python manage.py djstripe_sync_models -v2
 
       # - name: Deploy to Cloud Run Worker
       #   id: deploy-worker
