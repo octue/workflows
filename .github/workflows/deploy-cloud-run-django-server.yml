@@ -34,11 +34,6 @@ on:
         type: string
         required: false
         default: "--ingress=all --allow-unauthenticated"
-      django_settings_module:
-        type: string
-        required: false
-        default: ""
-        description: Defaults to "<server_name>.settings"
       env_vars:
         type: string
         required: false
@@ -257,11 +252,14 @@ jobs:
       - name: Get DJANGO_SETTINGS_MODULE
         id: django-settings
         run: |
-          if [ "${{ inputs.django_settings_module }}" = "" ]; then
-            echo "django_settings_module=${{ needs.info.outputs.server_name }}.settings" >> $GITHUB_OUTPUT
+          if [ "${{ needs.info.outputs.branch_tag_kebab }}" = "main" ]; then
+            export django_settings_module=${{ needs.info.outputs.server_name }}.settings.main
           else
-            echo "django_settings_module=${{ inputs.django_settings_module }}" >> $GITHUB_OUTPUT
+            export django_settings_module=${{ needs.info.outputs.server_name }}.settings.workspace
           fi
+          
+          echo "django_settings_module=$django_settings_module" >> $GITHUB_OUTPUT
+          echo "django_settings_module=$django_settings_module"
 
       - name: Set environment variables in .env file
         # Set here rather than piped directly to the container, to allow us to usefully debug later steps of this action via reverse shell
