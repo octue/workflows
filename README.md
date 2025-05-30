@@ -10,7 +10,7 @@ All of these reusable workflows assume the relevant Google Cloud infrastructure 
 This workflow builds and deploys a revision of a dockerised Octue Twined service revision to Kubernetes/Kueue, storing 
 the image in Google Cloud Artifact Registry. If a service registry is specified, the service revision is registered with
 it. Unless another dockerfile is provided locally or from a URL, the default data service `Dockerfile` is used (based 
-on python3.11).
+on python3.13).
 
 **Example usage**
 
