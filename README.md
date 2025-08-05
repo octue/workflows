@@ -1,6 +1,7 @@
 # Octue reusable workflows
 Octue's reusable GitHub Actions workflows for:
-- Building, deploying, and shelling into dockerised Django servers and Octue services on Google Cloud Run
+- Building Twined services and pushing them to an artifact registry
+- Building, deploying, and shelling into dockerised Django servers on Google Cloud Run
 - Code and release quality control
 
 ## Deployment
@@ -23,7 +24,7 @@ jobs:
   ...
   
   deploy:
-    uses: octue/workflows/.github/workflows/build-twined-service.yml@0.5.0
+    uses: octue/workflows/.github/workflows/build-twined-service.yml@0.11.0
     permissions:
       id-token: write
       contents: read
